@@ -77,25 +77,39 @@ takt -w sdd -t "要件の説明"
 
 ```bash
 # Phase 1: 要件生成
-takt -w sdd-requirements -t "要件の説明"
+takt --pipeline --skip-git --create-worktree no -w sdd-requirements -t "要件の説明"
+# 対話的なら
+# takt -w sdd-requirements
 
 # Phase 1.5: ギャップ分析（既存コードがある場合のみ）
-takt -w sdd-validate-gap
+takt --pipeline -w sdd-validate-gap -t "ギャップ分析"
+# 対話的なら
+# takt -w sdd-validate-gap
 
 # Phase 2: 設計生成
-takt -w sdd-design
+takt --pipeline -w sdd-design -t "設計の生成"
+# 対話的なら
+# takt -w sdd-design
 
-# Phase 2.5: 設計レビュー
-takt -w sdd-validate-design
+# Phase 2.5: 設計検証
+takt --pipeline -w sdd-validate-design -t "設計の検証"
+# 対話的なら
+# takt -w sdd-validate-design
 
 # Phase 3: タスク生成
-takt -w sdd-tasks
+takt --pipeline -w sdd-tasks -t "タスクの生成"
+# 対話的なら
+# takt -w sdd-tasks
 
 # Phase 4: 実装
-takt -w sdd-impl
+takt --pipeline -w sdd-impl -t "実装"
+# 対話的なら
+# takt -w sdd-impl
 
 # Phase 5: 実装検証
-takt -w sdd-validate-impl
+takt --pipeline -w sdd-validate-impl -t "実装の検証"
+# 対話的なら
+# takt -w sdd-validate-impl
 ```
 
 ### 出力ファイル
@@ -112,6 +126,36 @@ takt -w sdd-validate-impl
 | 3 | `tasks.md` | 実装タスクリスト（実装中に進捗が更新される） |
 
 
+## Steering（プロジェクトメモリ管理）
+
+SDD ワークフローとは別に、`.kiro/steering/` をプロジェクトメモリとして管理するピースを提供する。
+
+| ピース | 内容 |
+|--------|------|
+| `steering` | コアsteeringファイル（product.md / tech.md / structure.md）の生成・同期 |
+| `steering-custom` | ドメイン固有のカスタムsteeringファイルの作成 |
+
+### steering
+
+コードベースを分析し、プロジェクトの目的・技術スタック・構造パターンを `.kiro/steering/` に記録する。初回実行時はブートストラップモード、以降はコードとの乖離を検出するシンクモードで動作する。
+
+```bash
+takt --pipeline -w steering -t "steeringを同期" 
+# 対話的なら
+# takt -w steering
+```
+
+### steering-custom
+
+API 標準、テスト戦略、セキュリティなど、特定ドメインのsteeringファイルを作成する。`.takt/knowledge/steering-custom-template-files/` にテンプレートが用意されている。
+
+```bash
+takt --pipeline -w steering-custom -t "api-standards"
+# .takt/knowledge/steering-custom-template-files/{name}.mdの{name}を指定する
+# 対話的なら
+# takt -w steering-custom
+```
+
 ## プロジェクト構造
 
 ```
@@ -124,7 +168,9 @@ takt -w sdd-validate-impl
 │   ├── sdd-impl.yaml
 │   ├── sdd-validate-gap.yaml
 │   ├── sdd-validate-design.yaml
-│   └── sdd-validate-impl.yaml
+│   ├── sdd-validate-impl.yaml
+│   ├── steering.yaml            # プロジェクトメモリ管理（Bootstrap/Sync）
+│   └── steering-custom.yaml     # カスタムsteering作成
 ├── personas/                # ペルソナファセット
 ├── policies/                # ポリシーファセット
 ├── instructions/            # インストラクションファセット
