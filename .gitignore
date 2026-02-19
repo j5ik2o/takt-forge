@@ -230,7 +230,6 @@ dist
 /.gemini/
 /.cursor/
 /.opencode/
-/.kiro/
 
 /scripts/run-*.sh
 /scripts/generate-agents-md.sh
