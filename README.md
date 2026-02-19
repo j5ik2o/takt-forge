@@ -77,25 +77,39 @@ takt -w sdd -t "要件の説明"
 
 ```bash
 # Phase 1: 要件生成
-takt --pipeline -w sdd-requirements -t "要件の説明"
+takt --pipeline --skip-git --create-worktree no -w sdd-requirements -t "要件の説明"
+# 対話的なら
+# takt -w sdd-requirements
 
 # Phase 1.5: ギャップ分析（既存コードがある場合のみ）
-takt --pipeline -w sdd-validate-gap -t ""
+takt --pipeline -w sdd-validate-gap -t "ギャップ分析"
+# 対話的なら
+# takt -w sdd-validate-gap
 
 # Phase 2: 設計生成
-takt --pipeline -w sdd-design -t ""
+takt --pipeline -w sdd-design -t "設計の生成"
+# 対話的なら
+# takt -w sdd-design
 
-# Phase 2.5: 設計レビュー
-takt --pipeline -w sdd-validate-design -t ""
+# Phase 2.5: 設計検証
+takt --pipeline -w sdd-validate-design -t "設計の検証"
+# 対話的なら
+# takt -w sdd-validate-design
 
 # Phase 3: タスク生成
-takt --pipeline -w sdd-tasks -t ""
+takt --pipeline -w sdd-tasks -t "タスクの生成"
+# 対話的なら
+# takt -w sdd-tasks
 
 # Phase 4: 実装
-takt --pipeline -w sdd-impl -t ""
+takt --pipeline -w sdd-impl -t "実装"
+# 対話的なら
+# takt -w sdd-impl
 
 # Phase 5: 実装検証
-takt --pipeline -w sdd-validate-impl -t ""
+takt --pipeline -w sdd-validate-impl -t "実装の検証"
+# 対話的なら
+# takt -w sdd-validate-impl
 ```
 
 ### 出力ファイル
@@ -136,7 +150,10 @@ takt --pipeline -w steering -t "steeringを同期"
 API 標準、テスト戦略、セキュリティなど、特定ドメインのsteeringファイルを作成する。`.takt/knowledge/steering-custom-template-files/` にテンプレートが用意されている。
 
 ```bash
-takt --pipeline -w steering-custom -t "API標準のsteeringを作成"
+takt --pipeline -w steering-custom -t "api-standards"
+# .takt/knowledge/steering-custom-template-files/{name}.mdの{name}を指定する
+# 対話的なら
+# takt -w steering-custom
 ```
 
 ## プロジェクト構造
