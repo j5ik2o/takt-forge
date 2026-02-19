@@ -222,6 +222,8 @@ dist
 /.serena/cache/
 *.pkl
 
+/.mcp.json
+
 /.agent/
 /.claude/
 /.codex/
@@ -229,3 +231,6 @@ dist
 /.cursor/
 /.opencode/
 /.kiro/
+
+/scripts/run-*.sh
+/scripts/generate-agents-md.sh
