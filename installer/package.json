@@ -17,6 +17,10 @@
     "ai",
     "workflow"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/j5ik2o/takt-sdd"
+  },
   "license": "MIT",
   "engines": {
     "node": ">=18"
