@@ -234,3 +234,5 @@ dist
 
 /scripts/run-*.sh
 /scripts/generate-agents-md.sh
+
+/tests/*/.cargo-home/
