@@ -35,8 +35,8 @@ npx create-takt-sdd
 npx create-takt-sdd --lang ja
 ```
 
-`.takt/` ディレクトリにピースとファセット群がインストールされる。
-既存の `.takt/` がある場合は `--force` で上書きできる。
+`.takt/` ディレクトリにピースとファセット群がインストールされ、`package.json` に npm scripts が追加される。
+既存の `.takt/` がある場合は `--force` で上書きできる。既存の `package.json` がある場合は npm scripts のみマージされる（既存のスクリプトは上書きしない）。
 
 ## 概要
 
@@ -61,9 +61,7 @@ SDD は以下のフェーズを順に実行する：
 要件定義→ギャップ分析→設計→設計検証→実装→実装検証 を一括で実行します。
 
 ```bash
-takt --pipeline --skip-git --create-worktree no -w sdd -t "要件の説明..."
-# 対話的なら
-# takt -w sdd
+npm run sdd -- "要件の説明..."
 ```
 
 ### フェーズ別実行
@@ -72,41 +70,45 @@ takt --pipeline --skip-git --create-worktree no -w sdd -t "要件の説明..."
 
 ```bash
 # Phase 1: 要件生成
-takt --pipeline --skip-git --create-worktree no -w sdd-requirements -t "要件の説明..."
-# 対話的なら
-# takt -w sdd-requirements
-# .kiro/specs/{feature} の ｛feature}を確認すること
+npm run sdd:requirements -- "要件の説明..."
+# .kiro/specs/{feature} の {feature} を確認すること
 
 # Phase 1.5: ギャップ分析（既存コードがある場合のみ）
-takt --pipeline --skip-git --create-worktree no -w sdd-validate-gap -t "feature={feature}"
-# 対話的なら
-# takt -w sdd-validate-gap
+npm run sdd:validate-gap -- "feature={feature}"
 
 # Phase 2: 設計生成
-takt --pipeline --skip-git --create-worktree no -w sdd-design -t "feature={feature}"
-# 対話的なら
-# takt -w sdd-design
+npm run sdd:design -- "feature={feature}"
 
-# Phase 2.5: 設計検証
-takt --pipeline --skip-git --create-worktree no -w sdd-validate-design -t "feature={feature}"
-# 対話的なら
-# takt -w sdd-validate-design
+# Phase 2.5: 設計検証（NO-GO時は自動修正→再検証）
+npm run sdd:validate-design -- "feature={feature}"
 
 # Phase 3: タスク生成
-takt --pipeline --skip-git --create-worktree no -w sdd-tasks -t "feature={feature}"
-# 対話的なら
-# takt -w sdd-tasks
+npm run sdd:tasks -- "feature={feature}"
 
 # Phase 4: 実装
-takt --pipeline --skip-git --create-worktree no -w sdd-impl -t "feature={feature}"
-# 対話的なら
-# takt -w sdd-impl
+npm run sdd:impl -- "feature={feature}"
 
-# Phase 5: 実装検証
-takt --pipeline --skip-git --create-worktree no -w sdd-validate-impl -t "feature={feature}"
-# 対話的なら
-# takt -w sdd-validate-impl
+# Phase 5: 実装検証（不合格時は自動修正→再検証）
+npm run sdd:validate-impl -- "feature={feature}"
 ```
+
+<details>
+<summary>takt コマンドを直接使う場合</summary>
+
+```bash
+takt --pipeline --skip-git --create-worktree no -w sdd -t "要件の説明..."
+takt --pipeline --skip-git --create-worktree no -w sdd-requirements -t "要件の説明..."
+takt --pipeline --skip-git --create-worktree no -w sdd-validate-gap -t "feature={feature}"
+takt --pipeline --skip-git --create-worktree no -w sdd-design -t "feature={feature}"
+takt --pipeline --skip-git --create-worktree no -w sdd-validate-design -t "feature={feature}"
+takt --pipeline --skip-git --create-worktree no -w sdd-tasks -t "feature={feature}"
+takt --pipeline --skip-git --create-worktree no -w sdd-impl -t "feature={feature}"
+takt --pipeline --skip-git --create-worktree no -w sdd-validate-impl -t "feature={feature}"
+```
+
+対話モードの場合は `takt -w {ピース名}` で実行できます。
+
+</details>
 
 ### 出力ファイル
 
@@ -136,9 +138,7 @@ SDD ワークフローとは別に、`.kiro/steering/` をプロジェクトメ�
 コードベースを分析し、プロジェクトの目的・技術スタック・構造パターンを `.kiro/steering/` に記録する。初回実行時はブートストラップモード、以降はコードとの乖離を検出するシンクモードで動作する。
 
 ```bash
-takt --pipeline --skip-git --create-worktree no -w steering -t "steeringを同期" 
-# 対話的なら
-# takt -w steering
+npm run steering -- "steeringを同期"
 ```
 
 ### steering-custom
@@ -146,10 +146,8 @@ takt --pipeline --skip-git --create-worktree no -w steering -t "steeringを同�
 API 標準、テスト戦略、セキュリティなど、特定ドメインのsteeringファイルを作成する。`.takt/knowledge/steering-custom-template-files/` にテンプレートが用意されている。
 
 ```bash
-takt --pipeline --skip-git --create-worktree no -w steering-custom -t "api-standards"
+npm run steering:custom -- "api-standards"
 # .takt/knowledge/steering-custom-template-files/{name}.mdの{name}を指定する
-# 対話的なら
-# takt -w steering-custom
 ```
 
 ## プロジェクト構造
