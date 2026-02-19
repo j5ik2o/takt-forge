@@ -143,12 +143,27 @@ npm run steering -- "steeringを同期"
 
 ### steering-custom
 
-API 標準、テスト戦略、セキュリティなど、特定ドメインのsteeringファイルを作成する。`.takt/knowledge/steering-custom-template-files/` にテンプレートが用意されている。
+アーキテクチャ方針、API 標準、テスト戦略など、特定ドメインのsteeringファイルを作成する。`.takt/knowledge/steering-custom-template-files/` にテンプレートが用意されている。
 
 ```bash
-npm run steering:custom -- "api-standards"
+npm run steering:custom -- "architecture"
 # .takt/knowledge/steering-custom-template-files/{name}.mdの{name}を指定する
 ```
+
+利用可能なテンプレート：
+
+| テンプレート | 内容 |
+|-------------|------|
+| `architecture` | アーキテクチャスタイル（ヘキサゴナル、クリーンアーキテクチャ等）、レイヤー境界、依存ルール |
+| `api-standards` | エンドポイントパターン、リクエスト/レスポンス形式、バージョニング |
+| `testing` | テスト構成、テスト種別、カバレッジ |
+| `security` | 認証パターン、入力検証、シークレット管理 |
+| `database` | スキーマ設計、マイグレーション、クエリパターン |
+| `error-handling` | エラー型、ロギング、リトライ戦略 |
+| `authentication` | 認証フロー、権限管理、セッション管理 |
+| `deployment` | CI/CD、環境構成、ロールバック手順 |
+
+生成されたsteeringファイルは設計フェーズ（`sdd:design`, `sdd:validate-design` 等）で自動的に参照される。
 
 ## プロジェクト構造
 
