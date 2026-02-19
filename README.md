@@ -163,6 +163,26 @@ npm run steering:custom -- "architecture"
 | `authentication` | 認証フロー、権限管理、セッション管理 |
 | `deployment` | CI/CD、環境構成、ロールバック手順 |
 
+#### グリーンフィールド対応（コードがまだないプロジェクト）
+
+コードベースがゼロの状態でも、すべてのテンプレートでひな型を生成できる。テンプレートの構造をベースに、プレースホルダ（`[選択肢]`、`[理由]` 等）を含んだsteeringファイルが生成されるので、開発者が方針を記入して使う。
+
+方針を事前に指定したい場合は、テンプレート名に続けて記述する：
+
+```bash
+# アーキテクチャ方針を指定
+npm run steering:custom -- "architecture: ヘキサゴナルアーキテクチャ、アクターモデル"
+
+# テスト戦略を指定
+npm run steering:custom -- "testing: Vitest、E2Eは Playwright、カバレッジ80%以上"
+
+# DB方針を指定
+npm run steering:custom -- "database: PostgreSQL、Prisma ORM、マイグレーションは自動"
+
+# 方針なしでひな型だけ生成（後で手動記入）
+npm run steering:custom -- "testing"
+```
+
 生成されたsteeringファイルは設計フェーズ（`sdd:design`, `sdd:validate-design` 等）で自動的に参照される。
 
 ## プロジェクト構造
