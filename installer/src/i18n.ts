@@ -17,6 +17,9 @@ interface Messages {
   scriptsAdded: (count: number) => string;
   scriptsSkipped: (keys: string[]) => string;
   scriptsCreated: string;
+  installingSkills: string;
+  skillInstalled: (name: string) => string;
+  skillSymlinked: (name: string, target: string) => string;
 }
 
 const en: Messages = {
@@ -38,15 +41,19 @@ const en: Messages = {
   scriptsSkipped: (keys) =>
     `Skipped existing scripts: ${keys.join(", ")}`,
   scriptsCreated: "Created package.json with npm scripts",
+  installingSkills: "Installing takt skills to .agent/skills/...",
+  skillInstalled: (name) => `Installed skill: ${name}`,
+  skillSymlinked: (name, target) => `Symlinked ${target}/${name} -> .agent/skills/${name}`,
   helpText: `Usage: npx create-takt-sdd [options]
 
 Options:
-  --tag <version>  Version to install ("latest", "0.2.0", default: installer version)
-  --lang <en|ja>   Message language (default: en)
-  --force          Overwrite existing .takt/ directory
-  --dry-run        Preview without writing files
-  -h, --help       Show this help
-  -v, --version    Show version`,
+  --tag <version>    Version to install ("latest", "0.2.0", default: installer version)
+  --lang <en|ja>     Message language (default: en)
+  --force            Overwrite existing .takt/ directory
+  --dry-run          Preview without writing files
+  --without-skills   Skip installing takt skills to .agent/skills/
+  -h, --help         Show this help
+  -v, --version      Show version`,
   usageExamples: `
   Installed to: .takt/
 
@@ -82,15 +89,19 @@ const ja: Messages = {
   scriptsSkipped: (keys) =>
     `既存のスクリプトをスキップしました: ${keys.join(", ")}`,
   scriptsCreated: "npm scripts 付きの package.json を作成しました",
+  installingSkills: ".agent/skills/ に takt スキルをインストール中...",
+  skillInstalled: (name) => `スキルをインストールしました: ${name}`,
+  skillSymlinked: (name, target) => `シンボリックリンク作成: ${target}/${name} -> .agent/skills/${name}`,
   helpText: `使い方: npx create-takt-sdd [オプション]
 
 オプション:
-  --tag <version>  インストールするバージョン ("latest", "0.2.0", デフォルト: インストーラのバージョン)
-  --lang <en|ja>   メッセージ言語 (デフォルト: en)
-  --force          既存の .takt/ を上書き
-  --dry-run        プレビューのみ（ファイル書き込みなし）
-  -h, --help       ヘルプを表示
-  -v, --version    バージョンを表示`,
+  --tag <version>    インストールするバージョン ("latest", "0.2.0", デフォルト: インストーラのバージョン)
+  --lang <en|ja>     メッセージ言語 (デフォルト: en)
+  --force            既存の .takt/ を上書き
+  --dry-run          プレビューのみ（ファイル書き込みなし）
+  --without-skills   takt スキルのインストールをスキップ
+  -h, --help         ヘルプを表示
+  -v, --version      バージョンを表示`,
   usageExamples: `
   インストール先: .takt/
 

@@ -1,5 +1,5 @@
 import { execSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, symlinkSync, statSync, writeFileSync } from "node:fs";
 import type { IncomingMessage } from "node:http";
 import https from "node:https";
 import { createWriteStream } from "node:fs";
@@ -29,6 +29,18 @@ const FACET_DIRS = [
   "output-contracts",
 ];
 
+const TAKT_SKILLS = [
+  "takt-analyze",
+  "takt-facet",
+  "takt-optimize",
+  "takt-piece",
+];
+
+const SKILL_SYMLINK_TARGETS = [
+  ".claude/skills",
+  ".codex/skills",
+];
+
 const SDD_SCRIPTS: Record<string, string> = {
   "sdd": "takt --pipeline --skip-git --create-worktree no -w sdd -t",
   "sdd:requirements": "takt --pipeline --skip-git --create-worktree no -w sdd-requirements -t",
@@ -47,6 +59,7 @@ export interface InstallOptions {
   force: boolean;
   dryRun: boolean;
   tag: string | undefined;
+  withoutSkills: boolean;
   cwd: string;
 }
 
@@ -213,6 +226,19 @@ export async function install(options: InstallOptions): Promise<void> {
       if (existsSync(gitignoreSrc)) {
         console.log(msg.dryRunItem(join(TARGET_DIR, ".gitignore")));
       }
+      if (!options.withoutSkills) {
+        for (const skill of TAKT_SKILLS) {
+          const skillSrc = join(extractedDir, ".agent", "skills", skill);
+          if (existsSync(skillSrc)) {
+            for (const file of collectFiles(skillSrc, join(extractedDir, ".agent", "skills"))) {
+              console.log(msg.dryRunItem(join(".agent", "skills", file)));
+            }
+            for (const target of SKILL_SYMLINK_TARGETS) {
+              console.log(msg.dryRunItem(`${target}/${skill} -> ../../.agent/skills/${skill}`));
+            }
+          }
+        }
+      }
       console.log("");
       info(msg.dryRunSkipped);
       return;
@@ -237,6 +263,38 @@ export async function install(options: InstallOptions): Promise<void> {
     const gitignoreSrc = join(extractedTakt, ".gitignore");
     if (existsSync(gitignoreSrc)) {
       cpSync(gitignoreSrc, join(targetPath, ".gitignore"));
+    }
+
+    // takt スキルのインストール
+    const agentSkillsDir = join(options.cwd, ".agent", "skills");
+    const extractedSkillsDir = join(extractedDir, ".agent", "skills");
+    if (!options.withoutSkills && existsSync(extractedSkillsDir)) {
+      info(msg.installingSkills);
+      mkdirSync(agentSkillsDir, { recursive: true });
+      for (const skill of TAKT_SKILLS) {
+        const skillSrc = join(extractedSkillsDir, skill);
+        if (!existsSync(skillSrc)) continue;
+        const skillDest = join(agentSkillsDir, skill);
+        if (existsSync(skillDest)) {
+          rmSync(skillDest, { recursive: true });
+        }
+        cpSync(skillSrc, skillDest, { recursive: true });
+        info(msg.skillInstalled(skill));
+      }
+      // .claude/skills/ と .codex/skills/ にシンボリックリンクを作成
+      for (const target of SKILL_SYMLINK_TARGETS) {
+        const targetDir = join(options.cwd, target);
+        mkdirSync(targetDir, { recursive: true });
+        for (const skill of TAKT_SKILLS) {
+          if (!existsSync(join(agentSkillsDir, skill))) continue;
+          const linkPath = join(targetDir, skill);
+          if (existsSync(linkPath)) {
+            rmSync(linkPath, { recursive: true });
+          }
+          symlinkSync(`../../.agent/skills/${skill}`, linkPath);
+          info(msg.skillSymlinked(skill, target));
+        }
+      }
     }
 
     // package.json に npm scripts を追加

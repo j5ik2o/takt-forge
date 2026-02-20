@@ -16,6 +16,7 @@ interface ParsedArgs {
   help: boolean;
   version: boolean;
   tag: string | undefined;
+  withoutSkills: boolean;
 }
 
 function parseArgs(argv: string[]): ParsedArgs {
@@ -26,6 +27,7 @@ function parseArgs(argv: string[]): ParsedArgs {
     help: false,
     version: false,
     tag: undefined,
+    withoutSkills: false,
   };
 
   for (let i = 0; i < argv.length; i++) {
@@ -54,6 +56,9 @@ function parseArgs(argv: string[]): ParsedArgs {
         break;
       case "--dry-run":
         args.dryRun = true;
+        break;
+      case "--without-skills":
+        args.withoutSkills = true;
         break;
       case "-h":
       case "--help":
@@ -94,6 +99,7 @@ async function main(): Promise<void> {
     force: args.force,
     dryRun: args.dryRun,
     tag: args.tag,
+    withoutSkills: args.withoutSkills,
     cwd: process.cwd(),
   });
 }
