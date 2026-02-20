@@ -41,7 +41,7 @@ takt-sdd は [takt](https://github.com/nrslib/takt) のステートマシンベ�
 npx create-takt-sdd
 ```
 
-日本語メッセージで実行する場合：
+日本語のファセットとメッセージで実行する場合：
 
 ```bash
 npx create-takt-sdd --lang ja
