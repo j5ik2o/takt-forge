@@ -31,7 +31,7 @@ takt-sdd は [takt](https://github.com/nrslib/takt) のステートマシンベ�
 
 ## 前提条件
 
-- [takt](https://github.com/nrslib/takt) がインストール済みであること
+- Node.js 22+（takt はインストール時に `devDependencies` へ自動追加される）
 
 ## インストール
 
@@ -60,7 +60,7 @@ npx create-takt-sdd --tag 0.1.2
 - **`.agent/skills/`** — TAKT スキル（takt-analyze, takt-facet, takt-optimize, takt-piece）
 - **`.claude/skills/`, `.codex/skills/`** — `.agent/skills/` へのシンボリックリンク（Claude Code / Codex CLI 用）
 - **`references/takt/`** — takt のビルトインとドキュメント（インストーラリリース時のサブモジュールコミットに固定）
-- **`package.json`** — 各フェーズの npm scripts
+- **`package.json`** — 各フェーズの npm scripts + takt を devDependency に追加
 
 オプション：
 

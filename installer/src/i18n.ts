@@ -9,7 +9,6 @@ interface Messages {
   dryRunHeader: string;
   dryRunItem: (path: string) => string;
   dryRunSkipped: string;
-  taktNotFound: string;
   tarNotFound: string;
   archiveError: string;
   helpText: string;
@@ -17,6 +16,7 @@ interface Messages {
   scriptsAdded: (count: number) => string;
   scriptsSkipped: (keys: string[]) => string;
   scriptsCreated: string;
+  depsAdded: (keys: string[]) => string;
   installingSkills: string;
   skillInstalled: (name: string) => string;
   skillSymlinked: (name: string, target: string) => string;
@@ -36,15 +36,14 @@ const en: Messages = {
   dryRunHeader: "[dry-run] The following files would be installed:",
   dryRunItem: (path) => `  ${path}`,
   dryRunSkipped: "[dry-run] No files were written.",
-  taktNotFound:
-    "Warning: takt is not installed. Install it first: https://github.com/nrslib/takt",
   tarNotFound: "Error: tar command is required.",
   archiveError: "Error: .takt/ not found in the downloaded archive.",
   scriptsAdded: (count) =>
     `Added ${count} npm scripts to package.json`,
   scriptsSkipped: (keys) =>
     `Skipped existing scripts: ${keys.join(", ")}`,
-  scriptsCreated: "Created package.json with npm scripts",
+  scriptsCreated: "Created package.json with npm scripts and devDependencies",
+  depsAdded: (keys) => `Added devDependencies: ${keys.join(", ")}`,
   installingSkills: "Installing takt skills to .agent/skills/...",
   skillInstalled: (name) => `Installed skill: ${name}`,
   skillSymlinked: (name, target) => `Symlinked ${target}/${name} -> .agent/skills/${name}`,
@@ -88,8 +87,6 @@ const ja: Messages = {
   dryRunHeader: "[dry-run] 以下のファイルがインストールされます:",
   dryRunItem: (path) => `  ${path}`,
   dryRunSkipped: "[dry-run] ファイルは書き込まれませんでした。",
-  taktNotFound:
-    "警告: takt がインストールされていません。先にインストールしてください: https://github.com/nrslib/takt",
   tarNotFound: "エラー: tar コマンドが必要です。",
   archiveError:
     "エラー: ダウンロードしたアーカイブに .takt/ が見つかりません。",
@@ -97,7 +94,8 @@ const ja: Messages = {
     `package.json に ${count} 個の npm scripts を追加しました`,
   scriptsSkipped: (keys) =>
     `既存のスクリプトをスキップしました: ${keys.join(", ")}`,
-  scriptsCreated: "npm scripts 付きの package.json を作成しました",
+  scriptsCreated: "npm scripts と devDependencies 付きの package.json を作成しました",
+  depsAdded: (keys) => `devDependencies を追加しました: ${keys.join(", ")}`,
   installingSkills: ".agent/skills/ に takt スキルをインストール中...",
   skillInstalled: (name) => `スキルをインストールしました: ${name}`,
   skillSymlinked: (name, target) => `シンボリックリンク作成: ${target}/${name} -> .agent/skills/${name}`,

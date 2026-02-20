@@ -44,6 +44,10 @@ const SKILL_SYMLINK_TARGETS = [
   ".codex/skills",
 ];
 
+const SDD_DEV_DEPENDENCIES: Record<string, string> = {
+  "takt": "^0.20.0",
+};
+
 const SDD_SCRIPTS: Record<string, string> = {
   "sdd": "takt --pipeline --skip-git --create-worktree no -w sdd -t",
   "sdd:requirements": "takt --pipeline --skip-git --create-worktree no -w sdd-requirements -t",
@@ -172,13 +176,6 @@ function collectFiles(dir: string, base: string): string[] {
 export async function install(options: InstallOptions): Promise<void> {
   const msg = getMessages(options.lang);
   const targetPath = join(options.cwd, TARGET_DIR);
-
-  // takt の存在チェック
-  try {
-    execSync("which takt", { stdio: "ignore" });
-  } catch {
-    warn(msg.taktNotFound);
-  }
 
   // tar の存在チェック
   try {
@@ -351,7 +348,7 @@ export async function install(options: InstallOptions): Promise<void> {
       }
     }
 
-    // package.json に npm scripts を追加
+    // package.json に npm scripts と devDependencies を追加
     const pkgPath = join(options.cwd, "package.json");
     if (existsSync(pkgPath)) {
       const pkg = JSON.parse(readFileSync(pkgPath, "utf-8"));
@@ -367,6 +364,15 @@ export async function install(options: InstallOptions): Promise<void> {
         }
       }
       pkg.scripts = scripts;
+      const devDeps = pkg.devDependencies ?? {};
+      const depsAdded: string[] = [];
+      for (const [key, value] of Object.entries(SDD_DEV_DEPENDENCIES)) {
+        if (devDeps[key] === undefined) {
+          devDeps[key] = value;
+          depsAdded.push(key);
+        }
+      }
+      pkg.devDependencies = devDeps;
       writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\n", "utf-8");
       if (added.length > 0) {
         info(msg.scriptsAdded(added.length));
@@ -374,10 +380,14 @@ export async function install(options: InstallOptions): Promise<void> {
       if (skipped.length > 0) {
         warn(msg.scriptsSkipped(skipped));
       }
+      if (depsAdded.length > 0) {
+        info(msg.depsAdded(depsAdded));
+      }
     } else {
       const pkg = {
         private: true,
         scripts: { ...SDD_SCRIPTS },
+        devDependencies: { ...SDD_DEV_DEPENDENCIES },
       };
       writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\n", "utf-8");
       info(msg.scriptsCreated);

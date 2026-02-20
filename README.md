@@ -31,7 +31,7 @@ takt-sdd uses [takt](https://github.com/nrslib/takt)'s state-machine-based workf
 
 ## Prerequisites
 
-- [takt](https://github.com/nrslib/takt) must be installed
+- Node.js 22+ (takt is automatically added to `devDependencies` during installation)
 
 ## Installation
 
@@ -41,7 +41,7 @@ To add the SDD workflow to your project, run the following in your project root:
 npx create-takt-sdd
 ```
 
-For Japanese messages:
+For Japanese facets and messages:
 
 ```bash
 npx create-takt-sdd --lang ja
@@ -60,7 +60,7 @@ The installer sets up the following:
 - **`.agent/skills/`** — TAKT skills (takt-analyze, takt-facet, takt-optimize, takt-piece)
 - **`.claude/skills/`, `.codex/skills/`** — Symlinks to `.agent/skills/` for Claude Code and Codex CLI
 - **`references/takt/`** — takt builtins and docs (pinned to the submodule commit tracked by the installer release)
-- **`package.json`** — npm scripts for each phase
+- **`package.json`** — npm scripts for each phase + takt as devDependency
 
 Options:
 
