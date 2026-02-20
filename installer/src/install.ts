@@ -1,4 +1,5 @@
 import { execSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, symlinkSync, statSync, writeFileSync } from "node:fs";
 import type { IncomingMessage } from "node:http";
 import https from "node:https";
@@ -169,9 +170,88 @@ function collectFiles(dir: string, base: string): string[] {
   return results;
 }
 
+interface Manifest {
+  readonly version: string;
+  readonly installedAt: string;
+  readonly lang: Lang;
+  readonly taktRefHash: string;
+  readonly files: Readonly<Record<string, string>>;
+}
+
+const MANIFEST_FILE = ".manifest.json";
+
+function computeFileHash(filePath: string): string {
+  const content = readFileSync(filePath);
+  return createHash("sha256").update(content).digest("hex");
+}
+
+function loadManifest(manifestPath: string): Manifest | null {
+  if (!existsSync(manifestPath)) return null;
+  try {
+    return JSON.parse(readFileSync(manifestPath, "utf-8")) as Manifest;
+  } catch {
+    return null;
+  }
+}
+
+interface SyncResult {
+  readonly files: Record<string, string>;
+}
+
+function syncDirectory(
+  srcDir: string,
+  destDir: string,
+  srcBase: string,
+  destBase: string,
+  manifest: Manifest | null,
+  msg: ReturnType<typeof getMessages>,
+  cwd: string,
+): SyncResult {
+  const files: Record<string, string> = {};
+  if (!existsSync(srcDir)) return { files };
+
+  const srcFiles = collectFiles(srcDir, srcBase);
+  for (const relFile of srcFiles) {
+    const srcPath = join(srcBase, relFile);
+    const destPath = join(destBase, relFile);
+    const manifestKey = relative(cwd, destPath).split("\\").join("/");
+    const srcHash = computeFileHash(srcPath);
+    files[manifestKey] = srcHash;
+
+    if (!existsSync(destPath)) {
+      // New file — copy
+      mkdirSync(dirname(destPath), { recursive: true });
+      cpSync(srcPath, destPath);
+      info(msg.fileAdded(manifestKey));
+    } else if (manifest !== null) {
+      const recordedHash = manifest.files[manifestKey];
+      if (recordedHash === undefined) {
+        // File exists but not in manifest (pre-manifest environment)
+        warn(msg.fileSkippedCustomized(manifestKey));
+      } else {
+        const currentHash = computeFileHash(destPath);
+        if (currentHash === recordedHash) {
+          // User has not modified — safe to overwrite
+          cpSync(srcPath, destPath);
+          info(msg.fileUpdated(manifestKey));
+        } else {
+          // User has customized — skip
+          warn(msg.fileSkippedCustomized(manifestKey));
+        }
+      }
+    } else {
+      // No manifest, fresh install or force — overwrite
+      cpSync(srcPath, destPath);
+    }
+  }
+
+  return { files };
+}
+
 export async function install(options: InstallOptions): Promise<void> {
   const msg = getMessages(options.lang);
   const targetPath = join(options.cwd, TARGET_DIR);
+  const manifestPath = join(targetPath, MANIFEST_FILE);
 
   // tar の存在チェック
   try {
@@ -180,8 +260,12 @@ export async function install(options: InstallOptions): Promise<void> {
     errorExit(msg.tarNotFound);
   }
 
-  // 既存ディレクトリチェック
-  if (existsSync(join(targetPath, "pieces")) && !options.force) {
+  // マニフェスト読み込み＆モード判定
+  const manifest = loadManifest(manifestPath);
+  const isUpdate = manifest !== null;
+  const piecesExist = existsSync(join(targetPath, "pieces"));
+
+  if (!isUpdate && piecesExist && !options.force) {
     errorExit(msg.existsError("npx create-takt-sdd"));
   }
 
@@ -241,18 +325,25 @@ export async function install(options: InstallOptions): Promise<void> {
       return;
     }
 
-    // インストール
-    info(msg.installing);
+    // インストール / アップデート
+    info(isUpdate ? msg.updating : msg.installing);
     mkdirSync(targetPath, { recursive: true });
+
+    const allFiles: Record<string, string> = {};
 
     for (const dir of FACET_DIRS) {
       const srcDir = join(extractedTakt, options.lang, dir);
       if (existsSync(srcDir)) {
         const destDir = join(targetPath, dir);
-        if (existsSync(destDir)) {
+        if (!isUpdate && existsSync(destDir)) {
           rmSync(destDir, { recursive: true });
         }
-        cpSync(srcDir, destDir, { recursive: true });
+        const result = syncDirectory(
+          srcDir, destDir,
+          join(extractedTakt, options.lang), targetPath,
+          isUpdate ? manifest : null, msg, options.cwd,
+        );
+        Object.assign(allFiles, result.files);
       }
     }
 
@@ -267,20 +358,21 @@ export async function install(options: InstallOptions): Promise<void> {
       for (const skill of TAKT_SKILLS) {
         const skillSrc = join(extractedSkillsDir, skill);
         if (!existsSync(skillSrc)) continue;
-        const skillDest = join(agentSkillsDir, skill);
-        if (existsSync(skillDest)) {
-          rmSync(skillDest, { recursive: true });
-        }
-        cpSync(skillSrc, skillDest, { recursive: true });
+
+        // Prepare a temp copy with language selection applied
+        const skillTmp = join(tmpDir, "skill-prep", skill);
+        if (existsSync(skillTmp)) rmSync(skillTmp, { recursive: true });
+        cpSync(skillSrc, skillTmp, { recursive: true });
+
         // Select SKILL.md based on language
-        const skillLangMd = join(skillDest, `SKILL.${options.lang}.md`);
-        const skillMdPath = join(skillDest, "SKILL.md");
+        const skillLangMd = join(skillTmp, `SKILL.${options.lang}.md`);
+        const skillMdPath = join(skillTmp, "SKILL.md");
         if (existsSync(skillLangMd)) {
           cpSync(skillLangMd, skillMdPath);
         }
-        // Remove language-specific SKILL files
+        // Remove language-specific SKILL files from temp
         for (const l of ["ja", "en"] as const) {
-          const langFile = join(skillDest, `SKILL.${l}.md`);
+          const langFile = join(skillTmp, `SKILL.${l}.md`);
           if (existsSync(langFile)) {
             rmSync(langFile);
           }
@@ -293,6 +385,17 @@ export async function install(options: InstallOptions): Promise<void> {
             writeFileSync(skillMdPath, updated, "utf-8");
           }
         }
+
+        const skillDest = join(agentSkillsDir, skill);
+        if (!isUpdate && existsSync(skillDest)) {
+          rmSync(skillDest, { recursive: true });
+        }
+        const result = syncDirectory(
+          skillTmp, skillDest,
+          skillTmp, skillDest,
+          isUpdate ? manifest : null, msg, options.cwd,
+        );
+        Object.assign(allFiles, result.files);
         info(msg.skillInstalled(skill));
       }
       // .claude/skills/ と .codex/skills/ にシンボリックリンクを作成
@@ -314,7 +417,10 @@ export async function install(options: InstallOptions): Promise<void> {
     // takt リファレンスのダウンロード（スキルが参照するbuiltins等）
     if (!options.withoutSkills) {
       const refsDir = join(options.cwd, options.refsPath);
-      if (!existsSync(join(refsDir, "builtins"))) {
+      const needsRefDownload = isUpdate
+        ? manifest.taktRefHash !== TAKT_REF_HASH
+        : !existsSync(join(refsDir, "builtins"));
+      if (needsRefDownload) {
         info(msg.downloadingTaktRefs(options.refsPath));
         const taktTmpDir = mkdtempSync(join(tmpdir(), "takt-refs-"));
         try {
@@ -331,17 +437,47 @@ export async function install(options: InstallOptions): Promise<void> {
             const taktRoot = join(taktTmpDir, taktExtracted);
             mkdirSync(refsDir, { recursive: true });
 
-            // builtins/ をコピー
+            // builtins/ を syncDirectory でコピー
             const builtinsSrc = join(taktRoot, "builtins");
             if (existsSync(builtinsSrc)) {
-              cpSync(builtinsSrc, join(refsDir, "builtins"), { recursive: true });
+              const builtinsDest = join(refsDir, "builtins");
+              const result = syncDirectory(
+                builtinsSrc, builtinsDest,
+                builtinsSrc, builtinsDest,
+                isUpdate ? manifest : null, msg, options.cwd,
+              );
+              Object.assign(allFiles, result.files);
             }
 
             // docs/faceted-prompting.ja.md をコピー
             const fpSrc = join(taktRoot, "docs", "faceted-prompting.ja.md");
             if (existsSync(fpSrc)) {
-              mkdirSync(join(refsDir, "docs"), { recursive: true });
-              cpSync(fpSrc, join(refsDir, "docs", "faceted-prompting.ja.md"));
+              const docsDir = join(refsDir, "docs");
+              mkdirSync(docsDir, { recursive: true });
+              const fpDest = join(docsDir, "faceted-prompting.ja.md");
+              const fpKey = relative(options.cwd, fpDest).split("\\").join("/");
+              const fpHash = computeFileHash(fpSrc);
+
+              if (!existsSync(fpDest)) {
+                cpSync(fpSrc, fpDest);
+                info(msg.fileAdded(fpKey));
+              } else if (isUpdate) {
+                const recordedHash = manifest.files[fpKey];
+                if (recordedHash === undefined) {
+                  warn(msg.fileSkippedCustomized(fpKey));
+                } else {
+                  const currentHash = computeFileHash(fpDest);
+                  if (currentHash === recordedHash) {
+                    cpSync(fpSrc, fpDest);
+                    info(msg.fileUpdated(fpKey));
+                  } else {
+                    warn(msg.fileSkippedCustomized(fpKey));
+                  }
+                }
+              } else {
+                cpSync(fpSrc, fpDest);
+              }
+              allFiles[fpKey] = fpHash;
             }
 
             info(msg.taktRefsInstalled);
@@ -355,6 +491,14 @@ export async function install(options: InstallOptions): Promise<void> {
         }
       } else {
         info(msg.taktRefsSkipped);
+        // Preserve existing file hashes from manifest for refs
+        if (isUpdate) {
+          for (const [key, hash] of Object.entries(manifest.files)) {
+            if (key.startsWith(options.refsPath)) {
+              allFiles[key] = hash;
+            }
+          }
+        }
       }
     }
 
@@ -387,10 +531,14 @@ export async function install(options: InstallOptions): Promise<void> {
       pkg.scripts = scripts;
       const devDeps = pkg.devDependencies ?? {};
       const depsAdded: string[] = [];
+      const depsUpdatedKeys: string[] = [];
       for (const [key, value] of Object.entries(sddDevDependencies)) {
         if (devDeps[key] === undefined) {
           devDeps[key] = value;
           depsAdded.push(key);
+        } else if (devDeps[key] !== value) {
+          devDeps[key] = value;
+          depsUpdatedKeys.push(key);
         }
       }
       pkg.devDependencies = devDeps;
@@ -404,6 +552,9 @@ export async function install(options: InstallOptions): Promise<void> {
       if (depsAdded.length > 0) {
         info(msg.depsAdded(depsAdded));
       }
+      if (depsUpdatedKeys.length > 0) {
+        info(msg.depsUpdated(depsUpdatedKeys));
+      }
     } else {
       const pkg = {
         private: true,
@@ -414,7 +565,18 @@ export async function install(options: InstallOptions): Promise<void> {
       info(msg.scriptsCreated);
     }
 
-    info(msg.complete);
+    // マニフェスト書き込み
+    const newManifest: Manifest = {
+      version: version,
+      installedAt: new Date().toISOString(),
+      lang: options.lang,
+      taktRefHash: TAKT_REF_HASH,
+      files: allFiles,
+    };
+    writeFileSync(manifestPath, JSON.stringify(newManifest, null, 2) + "\n", "utf-8");
+    info(msg.manifestCreated);
+
+    info(isUpdate ? msg.updateComplete : msg.complete);
     console.log(msg.usageExamples);
     console.log("");
   } finally {
