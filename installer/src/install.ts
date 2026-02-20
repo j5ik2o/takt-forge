@@ -8,6 +8,7 @@ import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { type Lang, getMessages } from "./i18n.js";
+import { TAKT_REF_HASH } from "./generated/takt-ref.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -306,11 +307,11 @@ export async function install(options: InstallOptions): Promise<void> {
         const taktTmpDir = mkdtempSync(join(tmpdir(), "takt-refs-"));
         try {
           const taktArchive = join(taktTmpDir, "takt.tar.gz");
-          const taktTarball = `https://github.com/${TAKT_REPO}/archive/refs/heads/main.tar.gz`;
+          const taktTarball = `https://github.com/${TAKT_REPO}/archive/${TAKT_REF_HASH}.tar.gz`;
           await download(taktTarball, taktArchive);
           execSync(`tar -xzf "${taktArchive}" -C "${taktTmpDir}"`, { stdio: "ignore" });
 
-          // takt-main/ ディレクトリを探す
+          // takt-{hash}/ ディレクトリを探す
           const taktExtracted = readdirSync(taktTmpDir).find(
             (d) => d.startsWith("takt-") && statSync(join(taktTmpDir, d)).isDirectory()
           );
