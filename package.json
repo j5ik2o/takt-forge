@@ -1,6 +1,6 @@
 {
   "name": "takt-sdd",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "private": true,
   "description": "Spec-Driven Development workflow for takt",
   "scripts": {
