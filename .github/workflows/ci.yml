@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  installer:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        lang: [en, ja]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Build installer
+        working-directory: installer
+        run: npm ci --ignore-scripts && npm run build
+
+      - name: Dry-run (${{ matrix.lang }})
+        run: node installer/dist/cli.js --dry-run --lang ${{ matrix.lang }}
+
+  validate-pieces:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install takt
+        run: npm install -g takt
+
+      - name: Validate pieces (en)
+        run: |
+          for piece in .takt/en/pieces/*.yaml; do
+            echo "::group::$(basename "$piece")"
+            takt prompt "$piece"
+            echo "::endgroup::"
+          done
+
+      - name: Validate pieces (ja)
+        run: |
+          for piece in .takt/ja/pieces/*.yaml; do
+            echo "::group::$(basename "$piece")"
+            takt prompt "$piece"
+            echo "::endgroup::"
+          done
