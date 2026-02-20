@@ -217,16 +217,12 @@ export async function install(options: InstallOptions): Promise<void> {
     if (options.dryRun) {
       info(msg.dryRunHeader);
       for (const dir of FACET_DIRS) {
-        const srcDir = join(extractedTakt, dir);
+        const srcDir = join(extractedTakt, options.lang, dir);
         if (existsSync(srcDir)) {
-          for (const file of collectFiles(srcDir, extractedTakt)) {
+          for (const file of collectFiles(srcDir, join(extractedTakt, options.lang))) {
             console.log(msg.dryRunItem(join(TARGET_DIR, file)));
           }
         }
-      }
-      const gitignoreSrc = join(extractedTakt, ".gitignore");
-      if (existsSync(gitignoreSrc)) {
-        console.log(msg.dryRunItem(join(TARGET_DIR, ".gitignore")));
       }
       if (!options.withoutSkills) {
         for (const skill of TAKT_SKILLS) {
@@ -251,7 +247,7 @@ export async function install(options: InstallOptions): Promise<void> {
     mkdirSync(targetPath, { recursive: true });
 
     for (const dir of FACET_DIRS) {
-      const srcDir = join(extractedTakt, dir);
+      const srcDir = join(extractedTakt, options.lang, dir);
       if (existsSync(srcDir)) {
         const destDir = join(targetPath, dir);
         if (existsSync(destDir)) {
@@ -261,11 +257,7 @@ export async function install(options: InstallOptions): Promise<void> {
       }
     }
 
-    // .gitignore
-    const gitignoreSrc = join(extractedTakt, ".gitignore");
-    if (existsSync(gitignoreSrc)) {
-      cpSync(gitignoreSrc, join(targetPath, ".gitignore"));
-    }
+    // .gitignore は takt が初回実行時に自動配置するため、インストーラでは生成しない
 
     // takt スキルのインストール
     const agentSkillsDir = join(options.cwd, ".agent", "skills");
