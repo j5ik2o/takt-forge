@@ -155,8 +155,10 @@ movements:
         - name: requirements.md
           format: sdd-requirements
     rules:
-      - condition: Requirements are clear and complete
+      - condition: Requirements are clear and complete, and existing implementation exists
         next: validate-gap
+      - condition: Requirements are clear and complete, and no existing implementation
+        next: generate-design
       - condition: Insufficient information, requirements unclear
         next: ABORT
         appendix: |

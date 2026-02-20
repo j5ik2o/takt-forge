@@ -155,8 +155,10 @@ movements:
         - name: requirements.md
           format: sdd-requirements
     rules:
-      - condition: 要件が明確で完全
+      - condition: 要件が明確で完全、かつ既存実装あり
         next: validate-gap
+      - condition: 要件が明確で完全、かつ既存実装なし
+        next: generate-design
       - condition: 情報不足、要件が不明確
         next: ABORT
         appendix: |
