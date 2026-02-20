@@ -1,7 +1,5 @@
 # takt-sdd
 
-> **仕様を書け。あとは takt が確実に届ける。**
-
 [![npm version](https://img.shields.io/npm/v/create-takt-sdd)](https://www.npmjs.com/package/create-takt-sdd)
 [![Release](https://github.com/j5ik2o/takt-sdd/actions/workflows/release.yml/badge.svg?branch=main)](https://github.com/j5ik2o/takt-sdd/actions/workflows/release.yml)
 [![Publish](https://github.com/j5ik2o/takt-sdd/actions/workflows/publish-installer.yml/badge.svg)](https://github.com/j5ik2o/takt-sdd/actions/workflows/publish-installer.yml)
@@ -9,6 +7,8 @@
 [![Renovate](https://img.shields.io/badge/renovate-enabled-brightgreen.svg)](https://renovatebot.com)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![License](https://img.shields.io/badge/License-APACHE2.0-blue.svg)](https://opensource.org/licenses/apache-2-0)
+
+> **仕様を書け。あとは takt が確実に届ける。**
 
 [English](README.md)
 
