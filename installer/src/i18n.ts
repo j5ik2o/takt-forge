@@ -2,6 +2,7 @@ export type Lang = "en" | "ja";
 
 interface Messages {
   downloading: string;
+  downloadingVersion: (tag: string) => string;
   installing: string;
   existsError: (cmd: string) => string;
   complete: string;
@@ -20,6 +21,7 @@ interface Messages {
 
 const en: Messages = {
   downloading: "Downloading takt-sdd...",
+  downloadingVersion: (tag) => `Downloading takt-sdd ${tag}...`,
   installing: "Installing pieces and facets to .takt/...",
   existsError: (cmd) =>
     `.takt/ already exists. To overwrite, run:\n  ${cmd} --force`,
@@ -39,11 +41,12 @@ const en: Messages = {
   helpText: `Usage: npx create-takt-sdd [options]
 
 Options:
-  --lang <en|ja>  Message language (default: en)
-  --force         Overwrite existing .takt/ directory
-  --dry-run       Preview without writing files
-  -h, --help      Show this help
-  -v, --version   Show version`,
+  --tag <version>  Version to install ("latest", "0.2.0", default: installer version)
+  --lang <en|ja>   Message language (default: en)
+  --force          Overwrite existing .takt/ directory
+  --dry-run        Preview without writing files
+  -h, --help       Show this help
+  -v, --version    Show version`,
   usageExamples: `
   Installed to: .takt/
 
@@ -61,6 +64,7 @@ Options:
 
 const ja: Messages = {
   downloading: "takt-sdd をダウンロード中...",
+  downloadingVersion: (tag) => `takt-sdd ${tag} をダウンロード中...`,
   installing: ".takt/ にピースとファセットをインストール中...",
   existsError: (cmd) =>
     `.takt/ が既に存在します。上書きするには以下を実行してください:\n  ${cmd} --force`,
@@ -81,11 +85,12 @@ const ja: Messages = {
   helpText: `使い方: npx create-takt-sdd [オプション]
 
 オプション:
-  --lang <en|ja>  メッセージ言語 (デフォルト: en)
-  --force         既存の .takt/ を上書き
-  --dry-run       プレビューのみ（ファイル書き込みなし）
-  -h, --help      ヘルプを表示
-  -v, --version   バージョンを表示`,
+  --tag <version>  インストールするバージョン ("latest", "0.2.0", デフォルト: インストーラのバージョン)
+  --lang <en|ja>   メッセージ言語 (デフォルト: en)
+  --force          既存の .takt/ を上書き
+  --dry-run        プレビューのみ（ファイル書き込みなし）
+  -h, --help       ヘルプを表示
+  -v, --version    バージョンを表示`,
   usageExamples: `
   インストール先: .takt/
 

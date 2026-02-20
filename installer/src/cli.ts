@@ -15,6 +15,7 @@ interface ParsedArgs {
   dryRun: boolean;
   help: boolean;
   version: boolean;
+  tag: string | undefined;
 }
 
 function parseArgs(argv: string[]): ParsedArgs {
@@ -24,6 +25,7 @@ function parseArgs(argv: string[]): ParsedArgs {
     dryRun: false,
     help: false,
     version: false,
+    tag: undefined,
   };
 
   for (let i = 0; i < argv.length; i++) {
@@ -36,6 +38,15 @@ function parseArgs(argv: string[]): ParsedArgs {
           process.exit(1);
         }
         args.lang = value as Lang;
+        break;
+      }
+      case "--tag": {
+        const value = argv[++i];
+        if (!value) {
+          console.error('Error: --tag requires a value (e.g. "latest", "0.1.0")');
+          process.exit(1);
+        }
+        args.tag = value;
         break;
       }
       case "--force":
@@ -82,6 +93,7 @@ async function main(): Promise<void> {
     lang: args.lang,
     force: args.force,
     dryRun: args.dryRun,
+    tag: args.tag,
     cwd: process.cwd(),
   });
 }

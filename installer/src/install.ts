@@ -5,11 +5,20 @@ import https from "node:https";
 import { createWriteStream } from "node:fs";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, relative } from "node:path";
+import { dirname, join, relative, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { type Lang, getMessages } from "./i18n.js";
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+function getInstallerVersion(): string {
+  const pkgPath = resolve(__dirname, "..", "package.json");
+  const pkg = JSON.parse(readFileSync(pkgPath, "utf-8"));
+  return pkg.version as string;
+}
+
 const REPO = "j5ik2o/takt-sdd";
-const BRANCH = "main";
 const TARGET_DIR = ".takt";
 const FACET_DIRS = [
   "pieces",
@@ -37,6 +46,7 @@ export interface InstallOptions {
   lang: Lang;
   force: boolean;
   dryRun: boolean;
+  tag: string | undefined;
   cwd: string;
 }
 
@@ -51,6 +61,53 @@ function warn(msg: string): void {
 function errorExit(msg: string): never {
   console.error(`\x1b[1;31m==>\x1b[0m ${msg}`);
   return process.exit(1);
+}
+
+function fetchJson(url: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const request = (targetUrl: string): void => {
+      https
+        .get(targetUrl, { headers: { "User-Agent": "create-takt-sdd" } }, (res: IncomingMessage) => {
+          if (res.statusCode === 301 || res.statusCode === 302) {
+            const location = res.headers.location;
+            if (location) {
+              request(location);
+              return;
+            }
+          }
+          if (res.statusCode !== 200) {
+            reject(new Error(`Fetch failed: HTTP ${res.statusCode}`));
+            return;
+          }
+          let data = "";
+          res.on("data", (chunk: Buffer) => { data += chunk.toString(); });
+          res.on("end", () => resolve(data));
+        })
+        .on("error", reject);
+    };
+    request(url);
+  });
+}
+
+async function fetchLatestTag(): Promise<string> {
+  const data = await fetchJson(`https://api.github.com/repos/${REPO}/releases/latest`);
+  const release = JSON.parse(data);
+  const tagName = release.tag_name as string;
+  if (!tagName) {
+    throw new Error("No releases found");
+  }
+  return tagName;
+}
+
+function resolveTag(tagOption: string | undefined, installerVersion: string): string | Promise<string> {
+  if (tagOption === undefined) {
+    return `v${installerVersion}`;
+  }
+  if (tagOption === "latest") {
+    return fetchLatestTag();
+  }
+  // Accept both "v0.1.0" and "0.1.0"
+  return tagOption.startsWith("v") ? tagOption : `v${tagOption}`;
 }
 
 function download(url: string, dest: string): Promise<void> {
@@ -125,12 +182,16 @@ export async function install(options: InstallOptions): Promise<void> {
   const archivePath = join(tmpDir, "archive.tar.gz");
 
   try {
-    const tarballUrl = `https://github.com/${REPO}/archive/refs/heads/${BRANCH}.tar.gz`;
+    const installerVersion = getInstallerVersion();
+    const tag = await resolveTag(options.tag, installerVersion);
+    const version = tag.startsWith("v") ? tag.slice(1) : tag;
+    info(msg.downloadingVersion(tag));
+    const tarballUrl = `https://github.com/${REPO}/archive/refs/tags/${tag}.tar.gz`;
     await download(tarballUrl, archivePath);
 
     execSync(`tar -xzf "${archivePath}" -C "${tmpDir}"`, { stdio: "ignore" });
 
-    const extractedDir = join(tmpDir, `takt-sdd-${BRANCH}`);
+    const extractedDir = join(tmpDir, `takt-sdd-${version}`);
     const extractedTakt = join(extractedDir, ".takt");
 
     if (!existsSync(extractedTakt)) {
