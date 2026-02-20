@@ -54,7 +54,7 @@ npx create-takt-sdd --tag 0.1.2
 
 The installer sets up the following:
 
-- **`.takt/`** — Pieces (YAML workflows) and facets
+- **`.takt/`** — Pieces (YAML workflows) and facets in the selected language (`--lang`)
 - **`.agent/skills/`** — TAKT skills (takt-analyze, takt-facet, takt-optimize, takt-piece)
 - **`.claude/skills/`, `.codex/skills/`** — Symlinks to `.agent/skills/` for Claude Code and Codex CLI
 - **`references/takt/`** — takt builtins and docs (pinned to the submodule commit tracked by the installer release)
@@ -67,7 +67,7 @@ Options:
 | `--force` | Overwrite existing `.takt/` directory |
 | `--without-skills` | Skip installing skills and takt references |
 | `--tag <version>` | Install a specific version (`latest`, `0.2.0`, etc.) |
-| `--lang <en\|ja>` | Message language (default: `en`) |
+| `--lang <en\|ja>` | Facet and message language (default: `en`) |
 | `--dry-run` | Preview files without writing |
 
 When `package.json` already exists, only npm scripts are merged (existing scripts are not overwritten).
@@ -223,22 +223,20 @@ Generated steering files are automatically referenced during design phases (`sdd
 
 ```
 .takt/
-├── pieces/                  # Piece definitions (workflow YAML)
-│   ├── sdd.yaml             # Full-auto (Phases 1–5 combined)
-│   ├── sdd-requirements.yaml
-│   ├── sdd-design.yaml
-│   ├── sdd-tasks.yaml
-│   ├── sdd-impl.yaml
-│   ├── sdd-validate-gap.yaml
-│   ├── sdd-validate-design.yaml
-│   ├── sdd-validate-impl.yaml
-│   ├── steering.yaml            # Project memory management (Bootstrap/Sync)
-│   └── steering-custom.yaml     # Custom steering creation
-├── personas/                # Persona facets
-├── policies/                # Policy facets
-├── instructions/            # Instruction facets
-├── knowledge/               # Knowledge facets
-└── output-contracts/        # Output contract facets
+├── en/                      # English facets and pieces
+│   ├── pieces/              # Piece definitions (workflow YAML)
+│   ├── personas/            # Persona facets
+│   ├── policies/            # Policy facets
+│   ├── instructions/        # Instruction facets
+│   ├── knowledge/           # Knowledge facets
+│   └── output-contracts/    # Output contract facets
+└── ja/                      # Japanese facets and pieces
+    ├── pieces/              # ピース定義（ワークフロー YAML）
+    ├── personas/            # ペルソナファセット
+    ├── policies/            # ポリシーファセット
+    ├── instructions/        # インストラクションファセット
+    ├── knowledge/           # ナレッジファセット
+    └── output-contracts/    # 出力契約ファセット
 .agent/skills/               # TAKT skills (canonical location)
 ├── takt-analyze/            # Piece/facet analysis and improvement suggestions
 ├── takt-facet/              # Individual facet creation/editing

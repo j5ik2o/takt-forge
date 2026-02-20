@@ -54,7 +54,7 @@ npx create-takt-sdd --tag 0.1.2
 
 インストーラは以下をセットアップする：
 
-- **`.takt/`** — ピース（YAML ワークフロー）とファセット群
+- **`.takt/`** — 選択言語（`--lang`）のピース（YAML ワークフロー）とファセット群
 - **`.agent/skills/`** — TAKT スキル（takt-analyze, takt-facet, takt-optimize, takt-piece）
 - **`.claude/skills/`, `.codex/skills/`** — `.agent/skills/` へのシンボリックリンク（Claude Code / Codex CLI 用）
 - **`references/takt/`** — takt のビルトインとドキュメント（インストーラリリース時のサブモジュールコミットに固定）
@@ -67,7 +67,7 @@ npx create-takt-sdd --tag 0.1.2
 | `--force` | 既存の `.takt/` を上書き |
 | `--without-skills` | スキルと takt リファレンスのインストールをスキップ |
 | `--tag <version>` | 特定バージョンをインストール（`latest`, `0.2.0` 等） |
-| `--lang <en\|ja>` | メッセージ言語（デフォルト: `en`） |
+| `--lang <en\|ja>` | ファセット・メッセージの言語（デフォルト: `en`） |
 | `--dry-run` | ファイルを書き込まずにプレビュー |
 
 既存の `package.json` がある場合は npm scripts のみマージされる（既存のスクリプトは上書きしない）。
@@ -223,22 +223,20 @@ npm run steering:custom -- "testing"
 
 ```
 .takt/
-├── pieces/                  # ピース定義（ワークフロー YAML）
-│   ├── sdd.yaml             # フルオート（Phase 1〜5 一括）
-│   ├── sdd-requirements.yaml
-│   ├── sdd-design.yaml
-│   ├── sdd-tasks.yaml
-│   ├── sdd-impl.yaml
-│   ├── sdd-validate-gap.yaml
-│   ├── sdd-validate-design.yaml
-│   ├── sdd-validate-impl.yaml
-│   ├── steering.yaml            # プロジェクトメモリ管理（Bootstrap/Sync）
-│   └── steering-custom.yaml     # カスタムsteering作成
-├── personas/                # ペルソナファセット
-├── policies/                # ポリシーファセット
-├── instructions/            # インストラクションファセット
-├── knowledge/               # ナレッジファセット
-└── output-contracts/        # 出力契約ファセット
+├── en/                      # 英語版ファセット・ピース
+│   ├── pieces/              # Piece definitions (workflow YAML)
+│   ├── personas/            # Persona facets
+│   ├── policies/            # Policy facets
+│   ├── instructions/        # Instruction facets
+│   ├── knowledge/           # Knowledge facets
+│   └── output-contracts/    # Output contract facets
+└── ja/                      # 日本語版ファセット・ピース
+    ├── pieces/              # ピース定義（ワークフロー YAML）
+    ├── personas/            # ペルソナファセット
+    ├── policies/            # ポリシーファセット
+    ├── instructions/        # インストラクションファセット
+    ├── knowledge/           # ナレッジファセット
+    └── output-contracts/    # 出力契約ファセット
 .agent/skills/               # TAKT スキル（実体の配置場所）
 ├── takt-analyze/            # ピース・ファセットの分析と改善提案
 ├── takt-facet/              # 個別ファセットの作成・編集
