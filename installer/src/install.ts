@@ -228,6 +228,8 @@ export async function install(options: InstallOptions): Promise<void> {
           const skillSrc = join(extractedDir, ".agent", "skills", skill);
           if (existsSync(skillSrc)) {
             for (const file of collectFiles(skillSrc, join(extractedDir, ".agent", "skills"))) {
+              // Skip language-specific SKILL files (only SKILL.md is installed)
+              if (file.endsWith("SKILL.ja.md") || file.endsWith("SKILL.en.md")) continue;
               console.log(msg.dryRunItem(join(".agent", "skills", file)));
             }
             for (const target of SKILL_SYMLINK_TARGETS) {
@@ -274,13 +276,25 @@ export async function install(options: InstallOptions): Promise<void> {
           rmSync(skillDest, { recursive: true });
         }
         cpSync(skillSrc, skillDest, { recursive: true });
+        // Select SKILL.md based on language
+        const skillLangMd = join(skillDest, `SKILL.${options.lang}.md`);
+        const skillMdPath = join(skillDest, "SKILL.md");
+        if (existsSync(skillLangMd)) {
+          cpSync(skillLangMd, skillMdPath);
+        }
+        // Remove language-specific SKILL files
+        for (const l of ["ja", "en"] as const) {
+          const langFile = join(skillDest, `SKILL.${l}.md`);
+          if (existsSync(langFile)) {
+            rmSync(langFile);
+          }
+        }
         // SKILL.md 内の references/takt パスを置換
         if (options.refsPath !== DEFAULT_REFS_PATH) {
-          const skillMd = join(skillDest, "SKILL.md");
-          if (existsSync(skillMd)) {
-            const content = readFileSync(skillMd, "utf-8");
+          if (existsSync(skillMdPath)) {
+            const content = readFileSync(skillMdPath, "utf-8");
             const updated = content.replaceAll(DEFAULT_REFS_PATH, options.refsPath);
-            writeFileSync(skillMd, updated, "utf-8");
+            writeFileSync(skillMdPath, updated, "utf-8");
           }
         }
         info(msg.skillInstalled(skill));
