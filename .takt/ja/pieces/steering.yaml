@@ -60,7 +60,7 @@ movements:
     rules:
       - condition: steeringファイル生成完了
         next: COMPLETE
-      - condition: コードベースの情報が不足、生成不可
+      - condition: テンプレート読み込み失敗等、回復不能なエラーで生成不可
         next: ABORT
         appendix: |
           原因:

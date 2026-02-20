@@ -173,8 +173,13 @@ Separate from the SDD workflow, pieces are provided to manage `.kiro/steering/` 
 
 Analyzes the codebase and records the project's purpose, tech stack, and structural patterns in `.kiro/steering/`. Runs in bootstrap mode on first execution, and in sync mode afterwards to detect drift from the code.
 
+For greenfield projects (no existing code), skeleton files with placeholders are generated so developers can fill in their decisions.
+
 ```bash
 npm run steering -- "sync steering"
+
+# Greenfield: specify product direction and tech choices upfront
+npm run steering -- "REST API server with TypeScript, Express, PostgreSQL"
 ```
 
 ### steering-custom
@@ -201,7 +206,7 @@ Available templates:
 
 #### Greenfield Support (Projects with No Existing Code)
 
-Skeleton files can be generated from any template even when the codebase is empty. Steering files are generated based on the template structure with placeholders (`[choice]`, `[rationale]`, etc.) for developers to fill in.
+Both `steering` and `steering-custom` support greenfield projects. Skeleton files can be generated even when the codebase is empty. Steering files are generated based on the template structure with placeholders (`[choice]`, `[rationale]`, etc.) for developers to fill in.
 
 To specify policies upfront, add them after the template name:
 

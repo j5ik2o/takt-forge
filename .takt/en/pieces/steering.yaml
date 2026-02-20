@@ -60,7 +60,7 @@ movements:
     rules:
       - condition: Steering files generated successfully
         next: COMPLETE
-      - condition: Insufficient codebase information, unable to generate
+      - condition: Unrecoverable error such as template loading failure, unable to generate
         next: ABORT
         appendix: |
           Reason:
