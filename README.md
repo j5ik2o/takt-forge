@@ -8,7 +8,7 @@
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![License](https://img.shields.io/badge/License-APACHE2.0-blue.svg)](https://opensource.org/licenses/apache-2-0)
 
-> **Write the spec. takt ships the rest.**
+> **Write the spec. takt reliably ships the rest.**
 
 [日本語](README.ja.md)
 
