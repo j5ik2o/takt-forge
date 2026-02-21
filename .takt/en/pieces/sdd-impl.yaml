@@ -13,8 +13,6 @@ initial_movement: plan
 instructions:
   plan: ../instructions/impl-plan.md
   implement: ../instructions/impl-execute.md
-  implement-worker: ../instructions/impl-worker.md
-  merge-batch: ../instructions/merge-batch.md
 
 # --- Loop Monitors ---
 loop_monitors:
@@ -30,28 +28,6 @@ loop_monitors:
         **Reports to reference:**
         - Batch plan: {report:00-plan.md}
         - Implementation scope: {report:coder-scope.md}
-
-        **Evaluation criteria:**
-        - Are new tasks being completed in each cycle?
-        - Is the check count in tasks.md increasing?
-      rules:
-        - condition: Healthy (progress being made)
-          next: plan
-        - condition: Unproductive (no improvement)
-          next: ai_review
-
-  - cycle:
-      - plan
-      - parallel-implement
-      - merge-batch
-    threshold: 5
-    judge:
-      persona: supervisor
-      instruction_template: |
-        The plan-parallel-implement batch loop has repeated {cycle_count} times.
-
-        **Reports to reference:**
-        - Batch plan: {report:00-plan.md}
 
         **Evaluation criteria:**
         - Are new tasks being completed in each cycle?
@@ -103,8 +79,6 @@ movements:
         - name: 00-plan.md
           format: plan
     rules:
-      - condition: Unstarted parallel batch available
-        next: parallel-implement
       - condition: Unstarted sequential tasks available
         next: implement
       - condition: All tasks complete
@@ -155,91 +129,6 @@ movements:
       - condition: Issue encountered during implementation, plan revision needed
         next: plan
       - condition: Unable to determine, insufficient information
-        next: plan
-
-  # ===== Parallel implementation: Runs (P) tasks in parallel with workers =====
-  - name: parallel-implement
-    parallel:
-      - name: worker-1
-        edit: true
-        persona: coder
-        policy:
-          - coding
-          - testing
-        session: refresh
-        knowledge:
-          - backend
-          - architecture
-        allowed_tools:
-          - Read
-          - Glob
-          - Grep
-          - Edit
-          - Write
-          - Bash
-          - WebSearch
-          - WebFetch
-        required_permission_mode: edit
-        instruction: implement-worker
-        output_contracts:
-          report:
-            - name: worker-1-results.md
-              format: coder-scope
-        rules:
-          - condition: Assigned tasks complete
-          - condition: No assigned tasks
-          - condition: Implementation failed
-
-      - name: worker-2
-        edit: true
-        persona: coder
-        policy:
-          - coding
-          - testing
-        session: refresh
-        knowledge:
-          - backend
-          - architecture
-        allowed_tools:
-          - Read
-          - Glob
-          - Grep
-          - Edit
-          - Write
-          - Bash
-          - WebSearch
-          - WebFetch
-        required_permission_mode: edit
-        instruction: implement-worker
-        output_contracts:
-          report:
-            - name: worker-2-results.md
-              format: coder-scope
-        rules:
-          - condition: Assigned tasks complete
-          - condition: No assigned tasks
-          - condition: Implementation failed
-
-    rules:
-      - condition: any("Assigned tasks complete")
-        next: merge-batch
-      - condition: any("Implementation failed")
-        next: plan
-      - condition: all("No assigned tasks", "No assigned tasks")
-        next: plan
-
-  # ===== Batch result integration: Reflects parallel worker results in tasks.md =====
-  - name: merge-batch
-    edit: true
-    persona: planner
-    allowed_tools:
-      - Read
-      - Glob
-      - Write
-    required_permission_mode: edit
-    instruction: merge-batch
-    rules:
-      - condition: Integration complete
         next: plan
 
   # ===== AI Review =====

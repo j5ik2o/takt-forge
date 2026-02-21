@@ -20,28 +20,20 @@ Check the check status in tasks.md and determine the next batch.
    c. Determine the batch:
       - Group tasks that touch the same files into the same batch
       - Limit each batch to a range where related source code fits in context
-      - Tasks with (P) markers that have no file conflicts are parallel batch candidates
-   d. Determine the batch type:
-      - Sequential batch: Task groups with dependencies, or task groups without (P) markers
-      - Parallel batch: Two or more task groups with (P) markers that are mutually independent
 7. Decide the implementation approach
    - Cross-check against knowledge and policy constraints
 
-**Batch type determination:**
-- If there are 2+ incomplete (P) tasks that are mutually file-conflict-free and each task is Medium scope or larger -> Parallel batch
-- Small-scope tasks are not parallelized; group them in sequential batches (the startup overhead of merge-batch negates the benefits of parallelization)
-- Otherwise -> Sequential batch
-- When in doubt, choose sequential batch (err on the safe side)
+**Batch size determination criteria (both conditions must be met):**
 
-**Batch size determination criteria:**
-- Small (1-2 files changed): Up to 5-8 tasks per batch
-- Medium (3-5 files changed): Up to 2-3 tasks per batch
-- Large (6+ files changed): 1 task per batch
+Condition 1: Context limit (maximum tasks whose related code fits in context)
+- Small (1-2 files changed): Up to 8 tasks
+- Medium (3-5 files changed): Up to 3 tasks
+- Large (6+ files changed): Up to 1 task
 
-**Parallel batch worker assignment:**
-- Distribute evenly to worker-1 and worker-2
-- Verify that the files each worker touches do not overlap
-- tasks.md itself is not a worker modification target (updated collectively in merge-batch)
+Condition 2: Minimum workload (lower bound to amortize startup overhead)
+- Group tasks so that each batch has an estimated work time of 5+ minutes
+- For Small tasks only, include at least 3 tasks per batch
+- If remaining incomplete tasks fall below the minimum, group all remaining into one batch
 
 **Required output:**
 
@@ -56,17 +48,15 @@ Check the check status in tasks.md and determine the next batch.
 - Completed: {completed task count}/{total task count}
 - Not started: {not started task count}
 
-## Batch Type
-Sequential / Parallel
-
 ## Current Batch
-| Task ID | Task Summary | Worker Assignment |
-|---------|-------------|-------------------|
-| X.X | ... | - / worker-1 / worker-2 |
+| Task ID | Task Summary |
+|---------|-------------|
+| X.X | ... |
 
 ## Implementation Approach
 {Implementation strategy for tasks in the batch}
 
 ## Implementation Guidelines
 - {Guidelines the Coder should follow}
+- When tasks can be parallelized, leverage the CLI agent's internal parallel processing capabilities
 ```
