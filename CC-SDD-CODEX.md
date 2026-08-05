@@ -20,6 +20,13 @@ Kiro-style Spec-Driven Development on an agentic SDLC
 ## Development Guidelines
 - Think in English, generate responses in Japanese. All Markdown content written to project files (e.g., requirements.md, design.md, tasks.md, research.md, validation reports) MUST be written in the target language configured for this specification (see spec.json.language).
 
+## Kiro Surface
+The canonical Kiro workflow surface is exposed as two syntaxes:
+- `$kiro-*` — skill/conversation invocation syntax (e.g., `$kiro-spec-quick`)
+- `kiro:*` — npm script syntax (e.g., `kiro:spec:quick`, `kiro:impl`, `kiro:discovery`)
+
+Both syntaxes invoke the same underlying workflows. Use `$kiro-*` in agent conversations and `kiro:*` from the terminal via `npm run`.
+
 ## Minimal Workflow
 - Phase 0 (optional): `$kiro-steering`, `$kiro-steering-custom`
 - Discovery: `$kiro-discovery "idea"` — determines action path, writes brief.md + roadmap.md for multi-spec projects
